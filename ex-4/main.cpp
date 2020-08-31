@@ -136,7 +136,7 @@ public:
         }
 
         // "Assinala" as celulas na tabela dos estados de aceitacao (com o valor de 1)
-        queue<pair<int, int>> proximos;
+        queue<pair<int, int>> proximosEstados;
         for (int estado : this->aceitacao) {
             if (estado == 0) {  // verifica se é o extremo inferior
                 for (int i = 0; i < tamanho; i++) {
@@ -144,7 +144,7 @@ public:
                         continue;
                     }
                     tabela_min[i][0] = 1;
-                    proximos.push({i + 1, 0});
+                    proximosEstados.push({i + 1, 0});
                 }
             } else if (estado == tamanho) { // extremo superior
                 for (int j = 0; j < estado; j++) {
@@ -152,7 +152,7 @@ public:
                         continue;
                     }
                     tabela_min[estado - 1][j] = 1;
-                    proximos.push({estado, j});
+                    proximosEstados.push({estado, j});
                 }
             } else {
                 // percorre as colunas
@@ -161,7 +161,7 @@ public:
                         continue;
                     }
                     tabela_min[estado - 1][j] = 1;
-                    proximos.push({estado, j});
+                    proximosEstados.push({estado, j});
                 }
                 // percorre as linhas
                 for (int i = estado; i < tamanho; i++) {
@@ -169,39 +169,40 @@ public:
                         continue;
                     }
                     tabela_min[i][estado] = 1;
-                    proximos.push({i + 1, estado});
+                    proximosEstados.push({i + 1, estado});
                 }
 
             }
         }
 
+        //1. assinalar os pares encontrados e adiciona-los na fila
+        //2. verificar se a tabela esta toda preenchida
         vector<pair<int, int>> novosPares;
-        // while(!proximos.empty()) {
-        pair<int, int> par = proximos.front();
+        while(!proximosEstados.empty()) {
+             pair<int, int> par = proximosEstados.front();
+             // cout << "par agora: " << par.first << " - " << par.second << endl;
+             novosPares = testaPar(par);
+             tabela_min[par.first - 1][par.second] = 2; // Destacar o estado na tabela
 
-        novosPares = testaPar(par);
-        for(pair<int, int> par : novosPares) {
-            AssinalaPar(par);
+             for (pair<int, int> par : novosPares) {
+                 int i = par.first;
+                 int j = par.second;
+
+                 if(i > j && tabela_min[i - 1][j] == 0) { // Problema: zero na esquerda 🤣
+                     proximosEstados.push(par); // Adiciona os novos pares na fila
+                     tabela_min[i - 1][j] = 1;
+                 } else if(tabela_min[j - 1][i] == 0) {
+                     proximosEstados.push(par);
+                     tabela_min[j - 1][i] = 1;
+                 }
+             }
+
+            this->imprimeTabelaMin(tabela_min, tamanho);
+            cout << endl;
+            proximosEstados.pop();
         }
 
-        proximos.pop();
-        par = proximos.front();
-
-        // assinalar os pares encontrados e adiciona-los na fila
-        // verificar se a tabela esta toda preenchida
-
-        novosPares = testaPar(par);
-
-        //  }
-        /*cout << novosPares.size() << endl;
-
-        for(pair<int,int> par : novosPares) {
-          cout << par.first << " - " << par.second << endl;
-        }*/
-
-
         this->imprimeTabelaMin(tabela_min, tamanho);
-
 
         return min;
     }
