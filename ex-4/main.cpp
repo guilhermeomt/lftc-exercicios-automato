@@ -113,6 +113,18 @@ public:
 
     }
 
+
+   /* DFA minimizarCerto() {
+        DFA min; // DFA minimizado
+        int **tabela_min; // tabela de minimizacao
+
+
+        // Alocar espaco de memoria para a tabela min
+        tabela_min = new int
+
+    } */
+
+
     DFA minimizar() {
         DFA min;
         min.estadoInicial = this->estadoInicial;
@@ -141,49 +153,68 @@ public:
             if (estado == 0) {  // verifica se é o extremo inferior
                 for (int i = 0; i < tamanho; i++) {
                     if (tabela_min[i][0] == 1) {
+                        tabela_min[i][0] = 0;
                         continue;
                     }
                     tabela_min[i][0] = 1;
-                    proximosEstados.push({i + 1, 0});
                 }
             } else if (estado == tamanho) { // extremo superior
                 for (int j = 0; j < estado; j++) {
                     if (tabela_min[estado - 1][j] == 1) {
+                        tabela_min[estado - 1][j] = 0;
                         continue;
                     }
                     tabela_min[estado - 1][j] = 1;
-                    proximosEstados.push({estado, j});
                 }
-            } else {
+            } else { // estados intermediarios
                 // percorre as colunas
                 for (int j = 0; j < estado; j++) {
                     if (tabela_min[estado - 1][j] == 1) {
+                        tabela_min[estado - 1][j] = 0;
                         continue;
                     }
                     tabela_min[estado - 1][j] = 1;
-                    proximosEstados.push({estado, j});
                 }
                 // percorre as linhas
                 for (int i = estado; i < tamanho; i++) {
                     if (tabela_min[i][estado] == 1) {
+                        tabela_min[i][estado] = 0;
                         continue;
                     }
                     tabela_min[i][estado] = 1;
-                    proximosEstados.push({i + 1, estado});
                 }
 
             }
         }
+
+       // Coloca numa fila os estados marcados
+       for (int i = 1; i <= tamanho; i++) {
+           for (int j = 0; j < i; j++) {
+               if(tabela_min[i - 1][j] == 1) {
+                   proximosEstados.push({i, j});
+                //   cout << i << " - " << j << endl;
+               }
+           }
+       }
 
         //1. assinalar os pares encontrados e adiciona-los na fila
         //2. verificar se a tabela esta toda preenchida
         vector<pair<int, int>> novosPares;
         while(!proximosEstados.empty()) {
              pair<int, int> par = proximosEstados.front();
-             // cout << "par agora: " << par.first << " - " << par.second << endl;
              novosPares = testaPar(par);
-             tabela_min[par.first - 1][par.second] = 2; // Destacar o estado na tabela
 
+            int i = par.first;
+            int j = par.second;
+             if(i > j) {
+                 tabela_min[par.first - 1][par.second] = 2; // Destacar o estado na tabela
+             } else if(par.first == 0) {
+                 tabela_min[par.second - 1][0] = 2;
+             } else {
+                 tabela_min[par.second - 1][par.first] = 2;
+             }
+
+            // Marca os novos pares encontrados
              for (pair<int, int> par : novosPares) {
                  int i = par.first;
                  int j = par.second;
@@ -191,7 +222,7 @@ public:
                  if(i > j && tabela_min[i - 1][j] == 0) { // Problema: zero na esquerda 🤣
                      proximosEstados.push(par); // Adiciona os novos pares na fila
                      tabela_min[i - 1][j] = 1;
-                 } else if(tabela_min[j - 1][i] == 0) {
+                 } else if(j > 0 && tabela_min[j - 1][i] == 0) {
                      proximosEstados.push(par);
                      tabela_min[j - 1][i] = 1;
                  }
@@ -202,7 +233,6 @@ public:
             proximosEstados.pop();
         }
 
-        this->imprimeTabelaMin(tabela_min, tamanho);
 
         return min;
     }
